@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>物件配對工作台</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#18212b;--muted:#687583;--line:#e3e8ed;--navy:#172b43;--green:#198754;--yellow:#d69e00;--red:#d94848;--gray:#89939e;--shadow:0 8px 28px rgba(20,35,50,.06)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;font-size:15px}
+header{background:var(--navy);color:#fff;padding:22px max(20px,calc((100% - 1180px)/2));display:flex;justify-content:space-between;align-items:center;gap:16px}
+header h1{font-size:21px;margin:0 0 5px;font-weight:650;letter-spacing:.4px}header p{margin:0;color:#c7d2df;font-size:13px}
+.wrap{max-width:1180px;margin:24px auto;padding:0 18px}.layout{display:grid;grid-template-columns:350px 1fr;gap:18px;align-items:start}
+.panel,.property,.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.panel{padding:20px;position:sticky;top:14px}.panel h2,.section-head h2{font-size:17px;margin:0 0 16px}
+.field{margin:0 0 13px}.field label{display:block;font-size:13px;font-weight:650;margin-bottom:6px;color:#394653}
+input,select,textarea{width:100%;border:1px solid #d8e0e7;border-radius:9px;padding:10px 11px;font:inherit;font-size:14px;background:#fff;color:var(--ink);outline:none}
+input:focus,select:focus,textarea:focus{border-color:#6685a5;box-shadow:0 0 0 3px #6685a51c}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.checkline{display:flex;align-items:center;gap:8px;font-size:14px;margin:10px 0 15px}.checkline input{width:auto}
+.btn{border:0;border-radius:9px;padding:11px 14px;font-weight:650;cursor:pointer;font-size:14px}.primary{background:var(--navy);color:white}.secondary{background:#edf1f5;color:#243446}.danger{background:#fff0f0;color:#b52d2d}.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.hint{font-size:12px;line-height:1.55;color:var(--muted);margin-top:7px}
+main{min-width:0}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}.stat{padding:14px 15px}.stat small{color:var(--muted);font-size:12px}.stat strong{display:block;font-size:24px;margin-top:5px}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:4px 0 12px;gap:10px}.section-head h2{margin:0}.toolbar{display:flex;gap:8px;align-items:center}.toolbar select{width:auto;min-width:125px}
+.property{padding:17px;margin-bottom:12px}.p-top{display:flex;justify-content:space-between;gap:14px}.p-title{font-weight:700;font-size:16px;margin-bottom:5px}.sub{color:var(--muted);font-size:13px;line-height:1.6}.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap;height:fit-content}.green{background:#e7f5ed;color:#147344}.yellow{background:#fff5d8;color:#8a6500}.red{background:#fdeaea;color:#b52d2d}.gray{background:#edf0f3;color:#59636e}
+.meta{display:flex;gap:16px;flex-wrap:wrap;margin:13px 0 10px;font-size:13px}.meta b{font-weight:650}.reason{font-size:13px;color:#4c5966;background:#f7f9fb;border-radius:9px;padding:10px 12px;line-height:1.6}
+.p-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.p-actions button{padding:8px 11px;font-size:12px}
+.empty{border:1px dashed #cbd4dc;border-radius:14px;text-align:center;padding:38px 20px;color:var(--muted);background:#ffffff8a}
+.modal{position:fixed;inset:0;background:#14213180;display:none;align-items:center;justify-content:center;padding:18px;z-index:5}.modal.show{display:flex}.modal-box{background:#fff;border-radius:16px;width:min(680px,100%);max-height:92vh;overflow:auto;padding:22px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.modal-head h2{font-size:18px;margin:0}.close{border:0;background:#edf1f5;border-radius:8px;padding:7px 10px;cursor:pointer}
+footer{font-size:12px;color:var(--muted);text-align:center;padding:22px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.panel{position:static}.stats{grid-template-columns:repeat(2,1fr)}header{align-items:flex-start;flex-direction:column}.toolbar{width:100%}.section-head{align-items:flex-start;flex-direction:column}}
+
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tab{border:1px solid var(--line);background:#fff;color:#344454;border-radius:10px;padding:10px 15px;font-weight:650;cursor:pointer}
+.tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.view{display:none}.view.active{display:block}
+.crm-grid{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:start}
+.crm-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+.crm-card h2{font-size:17px;margin:0 0 14px}
+.client-row{border:1px solid var(--line);border-radius:11px;padding:13px;margin:9px 0}
+.client-row h3{font-size:15px;margin:0 0 5px}.client-row p{font-size:13px;color:var(--muted);margin:4px 0;line-height:1.5}
+.tag{display:inline-block;border-radius:20px;background:#edf1f5;padding:4px 8px;font-size:11px;margin:3px 4px 0 0}
+.due{color:#a66a00;font-weight:700}.overdue{color:#c73535;font-weight:700}
+.coach-output{background:#f6f8fa;border:1px solid var(--line);border-radius:11px;padding:15px;line-height:1.7;white-space:pre-wrap;font-size:14px;min-height:90px}
+@media(max-width:850px){.crm-grid{grid-template-columns:1fr}}
+</style>
+
+<script>
+function switchView(name) {
+  document.querySelectorAll('.tab').forEach(function (button) {
+    button.classList.toggle('active', button.getAttribute('data-view') === name);
+  });
+  document.querySelectorAll('.view').forEach(function (section) {
+    section.classList.toggle('active', section.id === 'view-' + name);
+  });
+  window.scrollTo(0, 0);
+}
+</script>
+</head>
+<body>
+<header><div><h1>物件配對工作台</h1><p>591 連結匯入・人工補充・客戶條件配對</p></div><div style="font-size:12px;color:#d8e2ec">資料儲存在目前使用的瀏覽器</div></header>
+<div class="wrap">
+<div class="tabs">
+<button type="button" class="tab active" data-view="matching" onclick="switchView('matching')">物件配對</button>
+<button type="button" class="tab" data-view="crm" onclick="switchView('crm')">客戶追蹤 CRM</button>
+<button type="button" class="tab" data-view="mentor" onclick="switchView('mentor')">AI 業務導師</button>
+</div>
+<section class="view active" id="view-matching">
+<div class="layout">
+<aside class="panel">
+<h2>客戶需求條件</h2>
+<div class="field"><label>客戶／需求名稱</label><input id="clientName" placeholder="例如：內湖南港租屋客戶"></div>
+<div class="two">
+<div class="field"><label>月租預算上限（元）</label><input id="budget" type="number" min="0" value="500000"></div>
+<div class="field"><label>預算計算方式</label><select id="budgetMode"><option value="rent">只計租金</option><option value="total">租金＋管理費</option></select></div>
+</div>
+<div class="field"><label>希望區域（可複選，以逗號分隔）</label><input id="areas" value="內湖,南港" placeholder="例如：內湖,南港"></div>
+<div class="field"><label>房型</label><select id="layoutPref"><option value="any">不限</option><option value="1">套房／1房</option><option value="2">2房</option><option value="3">3房</option><option value="4">4房以上</option></select></div>
+<label class="checkline"><input id="needParking" type="checkbox" checked> 必須有車位</label>
+<div class="field"><label>其他偏好（選填）</label><input id="otherPref" placeholder="例如：可養寵物、可開伙、家具需求"></div>
+<div class="btnrow"><button class="btn primary" id="saveClient">更新配對條件</button><button class="btn secondary" id="resetClient">恢復測試條件</button></div>
+<p class="hint">區域、預算及車位目前視為必要條件。必要條件未符合，不會判定為綠色。房型及其他偏好用於加權參考。</p>
+<hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+<h2>新增物件</h2>
+<div class="field"><label>591 物件連結</label><input id="url" placeholder="貼上 591.to 或 rent.591.com.tw 連結"></div>
+<div class="field"><label>物件名稱／標題</label><input id="name" placeholder="讀取失敗時可人工輸入"></div>
+<div class="two">
+<div class="field"><label>行政區</label><input id="district" placeholder="例如：內湖區"></div>
+<div class="field"><label>月租（元）</label><input id="rent" type="number" min="0" placeholder="例如：400000"></div>
+</div>
+<div class="two">
+<div class="field"><label>管理費（月／元）</label><input id="fee" type="number" min="0" placeholder="沒有可填 0"></div>
+<div class="field"><label>房數</label><select id="rooms"><option value="">未確認</option><option value="1">套房／1房</option><option value="2">2房</option><option value="3">3房</option><option value="4">4房以上</option></select></div>
+</div>
+<div class="two">
+<div class="field"><label>車位</label><select id="parking"><option value="">未確認</option><option value="yes">有</option><option value="no">無</option></select></div>
+<div class="field"><label>車位型式</label><select id="parkingType"><option value="">未確認</option><option>平面</option><option>機械</option><option>坡道平面</option><option>坡道機械</option></select></div>
+</div>
+<div class="field"><label>地址／路段（選填）</label><input id="address" placeholder="例如：成功路二段"></div>
+<div class="field"><label>補充資料／讀取失敗原因</label><textarea id="notes" rows="2" placeholder="例如：591 頁面無法讀取，依截圖補登；房型資訊待確認"></textarea></div>
+<div class="btnrow"><button class="btn primary" id="addProperty">加入物件並配對</button><button class="btn secondary" id="clearForm">清空欄位</button></div>
+<p class="hint">本頁不會自動繞過 591 的登入或存取限制。貼上連結後仍可人工補登；缺少關鍵資料會標示灰色。</p>
+</aside>
+<main>
+<div class="stats">
+<div class="stat"><small>物件總數</small><strong id="countAll">0</strong></div>
+<div class="stat"><small>綠色・符合</small><strong id="countGreen" style="color:var(--green)">0</strong></div>
+<div class="stat"><small>黃色・部分符合</small><strong id="countYellow" style="color:var(--yellow)">0</strong></div>
+<div class="stat"><small>紅色・不符合</small><strong id="countRed" style="color:var(--red)">0</strong></div>
+</div>
+<div class="section-head"><h2>物件配對結果</h2><div class="toolbar"><select id="filter"><option value="all">全部物件</option><option value="green">綠色・符合</option><option value="yellow">黃色・部分符合</option><option value="red">紅色・不符合</option><option value="gray">灰色・資料不足</option></select><button class="btn secondary" id="export">匯出 CSV</button></div></div>
+<div id="list"></div>
+</main>
+</div>
+</section>
+<section class="view" id="view-crm">
+<div class="crm-grid">
+<aside class="crm-card">
+<h2>新增客戶／追蹤紀錄</h2>
+<div class="field"><label>客戶姓名／代稱</label><input id="cName" placeholder="例如：王先生"></div>
+<div class="field"><label>聯絡方式</label><input id="cContact" placeholder="電話、LINE ID 或其他聯絡方式"></div>
+<div class="two">
+<div class="field"><label>客戶類型</label><select id="cType"><option>承租客戶</option><option>買方客戶</option><option>屋主／房東</option><option>賣方客戶</option></select></div>
+<div class="field"><label>目前階段</label><select id="cStage"><option>新客戶</option><option>需求確認</option><option>物件推薦</option><option>安排帶看</option><option>議價／洽談</option><option>簽約完成</option><option>暫緩／流失</option></select></div>
+</div>
+<div class="field"><label>需求摘要</label><textarea id="cNeed" rows="2" placeholder="預算、區域、房型、入住日期等"></textarea></div>
+<div class="field"><label>最近聯絡日期</label><input id="cLast" type="date"></div>
+<div class="field"><label>下次追蹤日期</label><input id="cNext" type="date"></div>
+<div class="field"><label>備註／最近互動</label><textarea id="cNote" rows="3" placeholder="客戶回覆、看屋感受、疑慮、下一步"></textarea></div>
+<button class="btn primary" id="addClient">新增客戶</button>
+<p class="hint">建議不要在此輸入身分證、銀行帳戶等敏感個資。</p>
+</aside>
+<main>
+<div class="stats">
+<div class="stat"><small>客戶總數</small><strong id="crmTotal">0</strong></div>
+<div class="stat"><small>待追蹤</small><strong id="crmDue" class="due">0</strong></div>
+<div class="stat"><small>已逾期</small><strong id="crmLate" style="color:var(--red)">0</strong></div>
+<div class="stat"><small>簽約完成</small><strong id="crmWon" style="color:var(--green)">0</strong></div>
+</div>
+<div class="crm-card">
+<div class="section-head"><h2>客戶名單與追蹤</h2><select id="crmFilter"><option value="all">全部階段</option><option>新客戶</option><option>需求確認</option><option>物件推薦</option><option>安排帶看</option><option>議價／洽談</option><option>簽約完成</option><option>暫緩／流失</option></select></div>
+<div id="clientList"></div>
+</div>
+</main>
+</div>
+</section>
+<section class="view" id="view-mentor">
+<div class="crm-grid">
+<aside class="crm-card">
+<h2>業務情境設定</h2>
+<div class="field"><label>選擇客戶（選填）</label><select id="mentorClient"><option value="">不指定客戶</option></select></div>
+<div class="field"><label>目前遇到的情境</label><select id="mentorScenario"><option>客戶看完房後沒有回覆</option><option>客戶覺得租金太高</option><option>屋主不願意降價</option><option>客戶同時比較多間物件</option><option>客戶臨時取消帶看</option><option>客戶提出不合理要求</option><option>我需要準備議價策略</option><option>其他／自行描述</option></select></div>
+<div class="field"><label>補充背景與對話內容</label><textarea id="mentorContext" rows="7" placeholder="描述客戶說了什麼、你的目標、目前卡關處。避免貼上個資。"></textarea></div>
+<button class="btn primary" id="coachBtn">產生業務建議</button>
+<p class="hint">此版本先提供內建情境教練示範，不會將資料送到外部 AI。正式 AI 導師需再串接模型 API 與後端權限管理。</p>
+</aside>
+<main>
+<div class="crm-card">
+<h2>AI 業務導師｜策略拆解</h2>
+<div class="coach-output" id="coachOutput">選擇情境並補充背景，系統會整理下一步策略、溝通方向與可直接使用的訊息草稿。</div>
+<div class="btnrow" style="margin-top:12px"><button class="btn secondary" id="copyCoach">複製建議</button></div>
+</div>
+<div class="crm-card">
+<h2>導師使用原則</h2>
+<p class="sub">1. 先釐清客戶真正的顧慮，不急著推銷。<br>2. 區分客戶明確條件與可協商偏好。<br>3. 每次互動都設定一個具體下一步。<br>4. 不虛構物件資訊、稀缺性或成交壓力。<br>5. 議價以雙方可接受的條件交換為主。</p>
+</div>
+</main>
+</div>
+</section>
+<footer>配對結果為依照目前輸入資料自動判斷；資料不完整時請先核實，不應僅憑顏色做出租決策。</footer>
+</div>
+<div class="modal" id="editModal"><div class="modal-box"><div class="modal-head"><h2>編輯物件資料</h2><button class="close" id="closeModal">關閉</button></div><div id="editContent"></div></div></div>
+<script>
+const $=id=>document.getElementById(id);
+function safeLoad(key,fallback){try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback;}catch(e){console.warn('資料讀取失敗：'+key,e);return fallback;}}
+let properties=safeLoad('match_properties_v1',[]);
+let client=safeLoad('match_client_v1',null);
+function readClient(){return {name:$('clientName').value,budget:Number($('budget').value)||0,budgetMode:$('budgetMode').value,areas:$('areas').value.split(/[,，、]/).map(x=>x.trim()).filter(Boolean),layout:$('layoutPref').value,needParking:$('needParking').checked,other:$('otherPref').value}}
+function applyClient(c){$('clientName').value=c.name||'';$('budget').value=c.budget??500000;$('budgetMode').value=c.budgetMode||'rent';$('areas').value=(c.areas||['內湖','南港']).join(',');$('layoutPref').value=c.layout||'any';$('needParking').checked=c.needParking!==false;$('otherPref').value=c.other||''}
+function persist(){localStorage.setItem('match_properties_v1',JSON.stringify(properties));localStorage.setItem('match_client_v1',JSON.stringify(readClient()));render()}
+function assess(p){
+ const c=readClient(), missing=[];
+ if(!p.district)missing.push('行政區未確認');
+ if(p.rent==null||p.rent==='')missing.push('租金未確認');
+ if(c.needParking && !p.parking)missing.push('車位狀態未確認');
+ if(c.layout!=='any' && !p.rooms)missing.push('房型未確認');
+ if(missing.length)return {status:'gray',score:null,reasons:['資料不足：'+missing.join('、')]};
+ let hard=[],good=[],soft=[];
+ const areaOK=c.areas.length===0||c.areas.some(a=>p.district.includes(a.replace('區',''))||p.district.includes(a));
+ if(areaOK)good.push('區域符合');else hard.push('區域不符合（'+p.district+'）');
+ const cost=Number(p.rent)+(c.budgetMode==='total'?Number(p.fee||0):0);
+ if(cost<=c.budget)good.push((c.budgetMode==='total'?'租金＋管理費':'租金')+'在預算內');else hard.push('超出預算 '+Math.round(cost-c.budget).toLocaleString()+' 元');
+ if(c.needParking){if(p.parking==='yes')good.push('有車位');else hard.push('沒有車位')}
+ if(c.layout!=='any'){if(p.rooms===c.layout)good.push('房型符合');else soft.push('房型不符合')}
+ else good.push('房型不限，符合');
+ if(hard.length)return {status:'red',score:Math.max(0,Math.round(good.length/(good.length+hard.length+soft.length)*100)),reasons:[...hard,...good,...soft]};
+ if(soft.length)return {status:'yellow',score:Math.round(good.length/(good.length+soft.length)*100),reasons:[...good,...soft]};
+ return {status:'green',score:100,reasons:good};
+}
+const labels={green:'符合需求',yellow:'部分符合',red:'不符合',gray:'資料不足'};
+function render(){
+ const results=properties.map(p=>({p,a:assess(p)}));
+ $('countAll').textContent=properties.length;
+ for(const s of ['green','yellow','red','gray'])$('count'+s[0].toUpperCase()+s.slice(1)).textContent=results.filter(x=>x.a.status===s).length;
+ const f=$('filter').value;const shown=results.filter(x=>f==='all'||x.a.status===f);
+ if(!shown.length){$('list').innerHTML='<div class="empty">目前沒有物件。可先貼上 591 連結，再補充物件資料。</div>';return}
+ $('list').innerHTML=shown.map(({p,a})=>`<article class="property"><div class="p-top"><div><div class="p-title">${esc(p.name||'未命名物件')}</div><div class="sub">${esc(p.district||'行政區未確認')} ${p.address?'・'+esc(p.address):''}</div></div><span class="pill ${a.status}">${labels[a.status]}${a.score===null?'':'・'+a.score+' 分'}</span></div><div class="meta"><span>租金 <b>${money(p.rent)}</b></span><span>管理費 <b>${money(p.fee)}</b></span><span>房型 <b>${p.rooms? (p.rooms==='4'?'4房以上':p.rooms+'房'):'未確認'}</b></span><span>車位 <b>${p.parking==='yes'?'有':p.parking==='no'?'無':'未確認'}</b></span></div><div class="reason"><b>判斷理由：</b>${a.reasons.map(esc).join('；')}${p.notes?'。補充：'+esc(p.notes):''}</div><div class="p-actions">${p.url?`<button class="btn secondary" onclick="openLink('${encodeURIComponent(p.url)}')">開啟 591 物件</button>`:''}<button class="btn secondary" onclick="editProperty('${p.id}')">編輯資料</button><button class="btn danger" onclick="deleteProperty('${p.id}')">刪除</button></div></article>`).join('');
+}
+function money(v){return v==null||v===''?'未確認':'NT$ '+Number(v).toLocaleString('en-US')}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function openLink(u){const url=decodeURIComponent(u);if(/^https:\/\/(591\.to|rent\.591\.com\.tw)\//i.test(url))window.open(url,'_blank','noopener');else alert('僅允許開啟 591 網址')}
+function clearForm(){['url','name','district','rent','fee','address','notes'].forEach(id=>$(id).value='');$('rooms').value='';$('parking').value='';$('parkingType').value=''}
+$('saveClient').onclick=()=>{persist();alert('配對條件已更新')};
+$('resetClient').onclick=()=>{applyClient({budget:500000,budgetMode:'rent',areas:['內湖','南港'],layout:'any',needParking:true});persist()};
+$('clearForm').onclick=clearForm;
+$('addProperty').onclick=()=>{
+ const url=$('url').value.trim();if(url&&!/^https:\/\/(591\.to|rent\.591\.com\.tw)\//i.test(url)){alert('請輸入有效的 591 網址');return}
+ const p={id:crypto.randomUUID(),url,name:$('name').value.trim(),district:$('district').value.trim(),rent:$('rent').value===''?'':Number($('rent').value),fee:$('fee').value===''?'':Number($('fee').value),rooms:$('rooms').value,parking:$('parking').value,parkingType:$('parkingType').value,address:$('address').value.trim(),notes:$('notes').value.trim()};
+ if(!p.url&&!p.name){alert('請至少輸入 591 連結或物件名稱');return}
+ properties.unshift(p);persist();clearForm();
+};
+$('filter').onchange=render;
+$('export').onclick=()=>{
+ const rows=[['物件名稱','591連結','行政區','地址','租金','管理費','房數','車位','配對狀態','分數','判斷理由']];
+ properties.forEach(p=>{const a=assess(p);rows.push([p.name,p.url,p.district,p.address,p.rent,p.fee,p.rooms,p.parking,labels[a.status],a.score,a.reasons.join('；')])});
+ const csv='\ufeff'+rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='物件配對資料.csv';a.click();URL.revokeObjectURL(a.href);
+};
+window.deleteProperty=id=>{if(confirm('確定刪除此物件？')){properties=properties.filter(p=>p.id!==id);persist()}};
+window.editProperty=id=>{
+ const p=properties.find(x=>x.id===id);if(!p)return;
+ const fields=[['name','物件名稱','text'],['url','591連結','url'],['district','行政區','text'],['address','地址／路段','text'],['rent','月租','number'],['fee','管理費','number'],['rooms','房數','select'],['parking','車位','parking'],['parkingType','車位型式','text'],['notes','補充資料','textarea']];
+ $('editContent').innerHTML=fields.map(([k,l,t])=>`<div class="field"><label>${l}</label>${t==='textarea'?`<textarea id="e_${k}" rows="3">${esc(p[k]||'')}</textarea>`:t==='select'?`<select id="e_${k}"><option value="">未確認</option>${['1','2','3','4'].map(v=>`<option value="${v}" ${p[k]===v?'selected':''}>${v==='4'?'4房以上':v+'房'}</option>`).join('')}</select>`:t==='parking'?`<select id="e_${k}"><option value="">未確認</option><option value="yes" ${p[k]==='yes'?'selected':''}>有</option><option value="no" ${p[k]==='no'?'selected':''}>無</option></select>`:`<input id="e_${k}" type="${t}" value="${esc(p[k]??'')}">`}</div>`).join('')+`<button class="btn primary" id="saveEdit">儲存修改</button>`;
+ $('editModal').classList.add('show');
+ $('saveEdit').onclick=()=>{fields.forEach(([k,,t])=>{let v=$('e_'+k).value;p[k]=['rent','fee'].includes(k)?(v===''?'':Number(v)):v});persist();$('editModal').classList.remove('show')};
+};
+$('closeModal').onclick=()=>$('editModal').classList.remove('show');
+$('editModal').onclick=e=>{if(e.target===$('editModal'))$('editModal').classList.remove('show')};
+applyClient(client||{budget:500000,budgetMode:'rent',areas:['內湖','南港'],layout:'any',needParking:true});
+render();
+
+// CRM and mentor prototype
+let clients=safeLoad('property_crm_clients_v1',[]);
+const todayISO=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+function saveClients(){localStorage.setItem('property_crm_clients_v1',JSON.stringify(clients));renderCRM()}
+function renderCRM(){
+ const today=todayISO(),filter=$('crmFilter').value;
+ $('crmTotal').textContent=clients.length;
+ $('crmDue').textContent=clients.filter(c=>c.next&&c.next<=today&&c.stage!=='簽約完成'&&c.stage!=='暫緩／流失').length;
+ $('crmLate').textContent=clients.filter(c=>c.next&&c.next<today&&c.stage!=='簽約完成'&&c.stage!=='暫緩／流失').length;
+ $('crmWon').textContent=clients.filter(c=>c.stage==='簽約完成').length;
+ const shown=clients.filter(c=>filter==='all'||c.stage===filter);
+ $('clientList').innerHTML=shown.length?shown.map(c=>{
+ const late=c.next&&c.next<today&&c.stage!=='簽約完成'&&c.stage!=='暫緩／流失';
+ const due=c.next&&c.next<=today&&c.stage!=='簽約完成'&&c.stage!=='暫緩／流失';
+ return `<div class="client-row"><div class="p-top"><div><h3>${esc(c.name)}</h3><p>${esc(c.type)}・${esc(c.stage)} ${c.contact?'・'+esc(c.contact):''}</p></div><span class="pill ${late?'red':due?'yellow':'gray'}">${late?'已逾期':due?'今日待追蹤':c.next?'下次 '+esc(c.next):'未設定追蹤'}</span></div><p><b>需求：</b>${esc(c.need||'未填寫')}</p><p><b>最近互動：</b>${esc(c.note||'未填寫')}</p><p>最近聯絡：${esc(c.last||'未記錄')}　｜　下次追蹤：<span class="${late?'overdue':due?'due':''}">${esc(c.next||'未設定')}</span></p><div class="btnrow"><button class="btn secondary" onclick="quickClient('${c.id}')">更新紀錄</button><button class="btn secondary" onclick="useClient('${c.id}')">交給 AI 導師</button><button class="btn danger" onclick="removeClient('${c.id}')">刪除</button></div></div>`
+ }).join(''):'<div class="empty">尚無客戶資料，請從左側新增。</div>';
+ const sel=$('mentorClient'),old=sel.value;sel.innerHTML='<option value="">不指定客戶</option>'+clients.map(c=>`<option value="${c.id}">${esc(c.name)}（${esc(c.stage)}）</option>`).join('');sel.value=clients.some(c=>c.id===old)?old:'';
+}
+$('addClient').onclick=()=>{
+ const name=$('cName').value.trim();if(!name){alert('請輸入客戶姓名或代稱');return}
+ clients.unshift({id:crypto.randomUUID(),name,contact:$('cContact').value.trim(),type:$('cType').value,stage:$('cStage').value,need:$('cNeed').value.trim(),last:$('cLast').value,next:$('cNext').value,note:$('cNote').value.trim()});
+ ['cName','cContact','cNeed','cNote'].forEach(id=>$(id).value='');$('cLast').value='';$('cNext').value='';saveClients();
+};
+$('crmFilter').onchange=renderCRM;
+window.removeClient=id=>{if(confirm('確定刪除此客戶紀錄？')){clients=clients.filter(c=>c.id!==id);saveClients()}};
+window.quickClient=id=>{
+ const c=clients.find(x=>x.id===id);if(!c)return;
+ const stage=prompt('更新階段：新客戶／需求確認／物件推薦／安排帶看／議價／洽談／簽約完成／暫緩／流失',c.stage);if(stage===null)return;
+ const next=prompt('下次追蹤日期（YYYY-MM-DD；留空代表未設定）',c.next||'');if(next===null)return;
+ const note=prompt('更新最近互動紀錄',c.note||'');if(note===null)return;
+ c.stage=stage;c.next=next.trim();c.note=note;c.last=todayISO();saveClients();
+};
+window.useClient=id=>{$('mentorClient').value=id;document.querySelector('[data-view="mentor"]').click()};
+function buildCoach(){
+ const c=clients.find(x=>x.id===$('mentorClient').value),scenario=$('mentorScenario').value,context=$('mentorContext').value.trim();
+ const base={
+ '客戶看完房後沒有回覆':['先不要連續追問，給客戶一個容易回答的問題。','確認是物件本身、價格、家庭討論，還是時程因素。','若 1–2 天未回覆，提供一次有價值的補充資訊，再安排下一次聯絡。','您好，想跟您確認一下上次看的物件，您目前比較在意的是格局、價格，還是地點呢？我可以依照您的考量再幫您篩選，避免浪費您的時間。'],
+ '客戶覺得租金太高':['先確認客戶認為高的是總月支出，還是與其他物件相比。','用同區域、屋況、管理費及車位等條件做可比比較。','提出條件交換，例如租期、起租日或家具配置，不要先承諾屋主會降價。','了解，預算確實需要仔細評估。我可以幫您把租金、管理費及物件條件一起比較，也想確認如果其他條件符合，您希望月支出控制在哪個範圍？'],
+ '屋主不願意降價':['先釐清屋主底價、出租期限與空置成本。','用近期可比物件與實際詢問／帶看回饋討論，而非只要求降價。','若價格不動，改談家具、修繕、租期或起租時間等條件。','我理解您希望維持租金。我整理一下目前市場上相近條件的物件與客戶回饋，再跟您討論是否有其他條件可以提高成交機會。'],
+ '客戶同時比較多間物件':['把比較維度固定：總月支出、通勤、屋況、採光、管理、車位。','請客戶選出最重要的前三項，避免只陷入單價比較。','提出一張簡短比較表，並安排優先看最接近核心需求的物件。','為了讓您比較得更有效率，我可以把幾間物件依總月支出、地點與居住條件整理在一起。您目前最重視的前三個條件是哪幾項？'],
+ '客戶臨時取消帶看':['先確認取消原因與是否需要改期，不責備客戶。','提供兩個具體可選時段，降低重新安排的成本。','若反覆取消，先確認需求是否仍有效，再投入帶看安排。','沒問題，我先幫您調整安排。您比較方便平日晚上或週末？我可以再確認適合的時段。'],
+ '客戶提出不合理要求':['先把要求拆成必要條件、可協商條件與不可承諾事項。','不立即答應；確認屋主、法規、契約及物件現況。','提出可行替代方案，並清楚說明需要確認的部分。','我先幫您確認這項需求在物件及契約上是否可行，避免先答應後續卻無法落實。如果有替代方式，我也會一併整理給您。'],
+ '我需要準備議價策略':['設定理想價格、可接受區間及退出條件。','列出雙方籌碼與可交換條件，避免只做單向讓價。','所有價格與條件以當事人授權及書面確認為準。','我建議先確認對方最在意的是價格、起租日、租期還是付款條件，再用條件交換爭取更好的結果。']
+ };
+ let plan=base[scenario]||['先定義這次溝通想取得的結果。','整理已知事實、未知資訊與不能承諾的事項。','設計一個低壓力、可執行的下一步。','我先整理目前狀況與可行選項，再確認您最希望優先解決的部分。'];
+ const out=`【情境】${scenario}${c?'\\n【客戶】'+c.name+'｜'+c.type+'｜'+c.stage:''}${c&&c.need?'\\n【已知需求】'+c.need:''}${context?'\\n【補充背景】'+context:''}\\n\\n【建議策略】\\n1. ${plan[0]}\\n2. ${plan[1]}\\n3. ${plan[2]}\\n\\n【可直接使用的訊息草稿】\\n${plan[3]}\\n\\n【下一步】\\n設定明確的回覆期限或下一次聯絡日期，並將客戶回覆更新至 CRM。\\n\\n提醒：以上為內建情境範本，不是即時 AI 模型生成；涉及租賃法規、價格及屋主授權的內容，請先核實。`;
+ $('coachOutput').textContent=out;
+}
+$('coachBtn').onclick=buildCoach;
+$('copyCoach').onclick=()=>{const t=$('coachOutput').textContent;if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>alert('已複製'));else alert('此瀏覽器不支援直接複製，請手動選取文字')};
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{ switchView(b.dataset.view); }));
+renderCRM();
+
+</script>
+</body></html>
